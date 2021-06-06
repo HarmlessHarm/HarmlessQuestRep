@@ -28,7 +28,12 @@ SLASH_QREP3 = "/questrep"
 
 function QRep:SlashHandler(N)
     if (not (N == "")) then
-        QRepDB.factionLength = tonumber(N)
+        local intN = tonumber(N) or 0
+        if (intN >= 0) then
+            QRepDB.factionLength = tonumber(N)
+        else
+            QRepDB.factionLength = 0
+        end
         -- QRep:QuestLog_Update("QuestLog")
     else
         print("Harmless Quest Rep Reward")
