@@ -1,5 +1,7 @@
 local addOnName, ns = ...
-local factionLength = 3
+
+-- CREDITS TO xxx FOR THE REP DB
+-- CRETITS TO xxx FOR THE TAGS IN QLOG
 
 -- TODOS FOR REPUTATION
 -- - [V] Fix functionality at level cap
@@ -7,6 +9,8 @@ local factionLength = 3
 -- - [ ] Make Rep visibility toggle
 -- - [V] Get REP from current quest log items
 -- - [V] Use Slash Commands to indicate how many characters to show
+-- - [ ] Handel factions starting with "The"
+
 
 -- - [ ] USE LeatrixPlus quest lvl tag code : LTP:3820
 -- - [ ] Add REP to quest tooltips (in chat, on map? needs questie?)
