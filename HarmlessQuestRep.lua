@@ -17,6 +17,8 @@ local addOnName, ns = ...
 -- - [ ] USE LeatrixPlus quest lvl tag code : LTP:3820
 -- - [ ] Add REP to quest tooltips (in chat, on map? needs questie?)
 --      - Questie/Modules/Tooltips/Link.lua:27 ItemRefTooltip
+--      - Use QuestieLoader to import Tooltip modules and Chat filter
+--      - Use the QuestieTooltip to add a line to tooltip
 
 
 
@@ -29,6 +31,88 @@ SLASH_QREP1 = "/qr"
 SLASH_QREP2 = "/qrep"
 SLASH_QREP3 = "/questrep"
 SLASH_QREP4 = "/hqr"
+
+
+local REP_TOOLTIPS = true
+
+----------------------------------------------
+----------- Rep Questie Tooltips -------------
+----------------------------------------------
+
+local HarmlessItemRepTooltip = function(questID)
+    local db_item = ns.quest_rep_db[questID]
+    print(db_item)
+    ItemRefTooltip:AddLine("Reputation", 1, 1, 1, 1)
+    local textLeft, textRight
+    for _, q in ipairs(db_item) do
+        
+        -- ItemRefTooltip:AddDoubleLine()
+    end
+end
+
+local HarmlessGameTooltip = function()
+    GameTooltip:AddLine("HARMLESS", 1, 1, 1, nil)
+end
+
+
+-- ItemRefTooltip:HookScript("OnTooltipSetItem", HarmlessItemTooltip)
+-- GameTooltip:HookScript("OnTooltipSetUnit", HarmlessGameTooltip)
+-- GameTooltip:HookScript("OnTooltipSetItem", HarmlessGameTooltip)
+
+LoadAddOn("Questie")
+if Questie then
+    print("Questie active")
+else
+    print("No Questie Loaded")
+end
+
+if QuestieLoader then
+    print("Loader active")
+    local QuestieLink = QuestieLoader:ImportModule("QuestieLink")
+    local QuestieDB = QuestieLoader:ImportModule("QuestieDB")
+
+    local oldItemSetHyperlink = ItemRefTooltip.SetHyperlink
+
+    function ItemRefTooltip:SetHyperlink(link, ...)
+        print('Custom Hyperlink Triggered')
+        local _, isQuestieLink, questId
+        isQuestieLink, questId = string.match(link, "(questie):(%d+):")
+        QuestieLink.lastItemRefTooltip = QuestieLink.lastItemRefTooltip or link
+    
+        if REP_TOOLTIPS and isQuestieLink and questId then
+            print('isQuestieLink')
+        --     Questie:Debug(DEBUG_DEVELOP, "[QuestieTooltips:ItemRefTooltip] SetHyperlink: " .. link)
+            ShowUIPanel(ItemRefTooltip)
+            ItemRefTooltip:SetOwner(UIParent, "ANCHOR_PRESERVE");
+            QuestieLink:CreateQuestTooltip(link)
+            -- Add Reputation information below the Questie Tooltip
+            HarmlessItemRepTooltip(questId)
+            ItemRefTooltip:Show()
+    
+            local tooltipText = ItemRefTooltipTextLeft1:GetText()
+            if QuestieLink.lastItemRefTooltip == tooltipText then
+                ItemRefTooltip:Hide()
+                QuestieLink.lastItemRefTooltip = ""
+                return
+            end
+    
+            QuestieLink.lastItemRefTooltip = tooltipText
+            return
+        else
+            -- Make sure to call the default function so everything that is not Questie can be handled (item links e.g.)
+            oldItemSetHyperlink(self, link, ...)
+        end
+    end
+end
+
+-- if QuestieLoader then
+-- end
+
+
+
+
+----------------------------------------------
+
 
 function QRep:SlashHandler(N)
     if (not (N == "")) then
@@ -174,9 +258,8 @@ end
 function getQuestRep(questID, compact)
     local questRep = nil
     local db_item = ns.quest_rep_db[questID]
-    if db_item
-    then
-        for i, q in ipairs(ns.quest_rep_db[questID]) do
+    if db_item then
+        for i, q in ipairs(db_item) do
             if (compact) then
                 if (QRepDB.factionLength and QRepDB.factionLength > 0) then 
                     questRep = string.sub(q[1], 1, QRepDB.factionLength)
