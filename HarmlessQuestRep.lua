@@ -1,9 +1,19 @@
 local addOnName, ns = ...
+------ Information -------
+-- Author: HarmlessHarm
+-- Server: Zandalari Tribe | EU
 
--- CREDITS TO xxx FOR THE REP DB
--- CRETITS TO xxx FOR THE TAGS IN QLOG
+------ Credits -------
+-- I want to give credits to SevenEuros!
+-- This addon relies heavily on his/her Rep DB that is bundled with the QuestRep Addon
+-- For more information about QuestRep visit: https://www.curseforge.com/wow/addons/questrep
+-- I also want to give credits to KindredTwitch
+-- The idea of adding tags to the quest log as well as the implementation of it leaded directly
+-- to the creation of my AddOn
+-- For more information about Quest XP Tracker visit https://www.curseforge.com/wow/addons/quest-xp-tracker
 
--- TODOS FOR REPUTATION
+
+------ ToDo's -------
 -- - [V] Fix functionality at level cap
 -- - [V] Handle quests that give no REP
 -- - [ ] Make Rep visibility toggle
@@ -39,7 +49,8 @@ local REP_TOOLTIPS = true
 ----------- Rep Questie Tooltips -------------
 ----------------------------------------------
 
-local HarmlessItemRepTooltip = function(questID)
+local function HarmlessItemRepTooltip(questID)
+    print(ns)
     local db_item = ns.quest_rep_db[questID]
     print(db_item)
     ItemRefTooltip:AddLine("Reputation", 1, 1, 1, 1)
