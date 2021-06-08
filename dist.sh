@@ -9,8 +9,8 @@ YELLOW="\033[0;33m"
 # REMOTE_IP="37.97.150.110"
 # REMOTE_PATH="/var/www/harmlesskey.com/public_html"
 ADDON_NAME="HarmlessQuestRep"
-LOCAL_PATH="dist/*"
-SRC_PATH="src/*"
+DIST_PATH="dist/"
+SRC_PATH="src/"
 BRANCH="master"
 
 printf "\n${GREEN}> STARTING DEPLOYMENT${NC}\n"
@@ -22,8 +22,14 @@ if [ $? -ne 0 ]; then
 fi
 
 printf "\n${GREEN}> COPYING FILES${NC}\n"
-mkdir temp/${ADDON_NAME}/
-cp ${SRC_PATH} temp/${ADDON_NAME}
+# mkdir temp
+TEMP="${DIST_PATH}${ADDON_NAME}"
+# printf ${TEMP}
+mkdir ${TEMP}
+cp *.lua *.toc ${TEMP}
+# zip ${DIST_PATH}${ADDON_NAME}-BC.zip -r ${DIST_PATH}/${ADDON_NAME}
+powershell Compress-Archive -Force ${TEMP} ${TEMP}-BC.zip
+rm -rf ${TEMP}
 
 
 
