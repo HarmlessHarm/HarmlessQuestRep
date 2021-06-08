@@ -10,6 +10,8 @@ local addOnName, ns = ...
 -- - [V] Get REP from current quest log items
 -- - [V] Use Slash Commands to indicate how many characters to show
 -- - [ ] Handel factions starting with "The"
+-- - [ ] Add option to show XP. Take a look at old addon 
+-- - [ ] Add option to show Gold reward at max level. conversion rate: 6c per exp
 
 
 -- - [ ] USE LeatrixPlus quest lvl tag code : LTP:3820
@@ -19,12 +21,14 @@ local addOnName, ns = ...
 
 
 local QRep = CreateFrame("FRAME")
+
 QRep:RegisterEvent("ADDON_LOADED")
 -- QRep:RegisterEvent("MODIFIER_STATE_CHANGED")
 
 SLASH_QREP1 = "/qr"
 SLASH_QREP2 = "/qrep"
 SLASH_QREP3 = "/questrep"
+SLASH_QREP4 = "/hqr"
 
 function QRep:SlashHandler(N)
     if (not (N == "")) then
