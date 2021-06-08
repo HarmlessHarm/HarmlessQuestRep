@@ -1,0 +1,9 @@
+## Interface: 20501
+## Title: Harmless Quest Rep Rewards
+## Author: HarmlessHarm
+## Version: 0.1
+## Notes: Shows Quest Rep in the QuestLog Frame
+## SavedVariablesPerCharacter: QRepDB
+
+db.lua
+HarmlessQuestRep.lua

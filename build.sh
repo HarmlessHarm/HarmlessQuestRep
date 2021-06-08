@@ -9,8 +9,9 @@ YELLOW="\033[0;33m"
 # REMOTE_IP="37.97.150.110"
 # REMOTE_PATH="/var/www/harmlesskey.com/public_html"
 ADDON_NAME="HarmlessQuestRep"
+BCC_FLAG="-BCC"
+ERA_FLAG="-ERA"
 DIST_PATH="dist/"
-SRC_PATH="src/"
 BRANCH="master"
 
 printf "\n${GREEN}> STARTING DEPLOYMENT${NC}\n"
@@ -22,16 +23,20 @@ if [ $? -ne 0 ]; then
 fi
 
 printf "\n${GREEN}> COPYING FILES${NC}\n"
-# mkdir temp
 TEMP="${DIST_PATH}${ADDON_NAME}"
-# printf ${TEMP}
 mkdir ${TEMP}
 cp *.lua *.toc ${TEMP}
-# zip ${DIST_PATH}${ADDON_NAME}-BC.zip -r ${DIST_PATH}/${ADDON_NAME}
-powershell Compress-Archive -Force ${TEMP} ${TEMP}-BC.zip
+
+printf "\n${GREEN}> CREATING ERA DIST${NC}\n"
+cp ${TEMP}/${ADDON_NAME}${ERA_FLAG}.toc ${TEMP}/${ADDON_NAME}.toc
+powershell Compress-Archive -Force ${TEMP} ${TEMP}${ERA_FLAG}.zip
+
+printf "\n${GREEN}> CREATING BCC DIST${NC}\n"
+cp ${TEMP}/${ADDON_NAME}${BCC_FLAG}.toc ${TEMP}/${ADDON_NAME}.toc
+powershell Compress-Archive -Force ${TEMP} ${TEMP}${BCC_FLAG}.zip
+
+printf "\n${GREEN}> CLEANING UP${NC}\n"
 rm -rf ${TEMP}
-
-
 
 # # TODO check for unstaged files
 # printf "> Building for production\n"
