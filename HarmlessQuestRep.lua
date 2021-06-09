@@ -1,9 +1,19 @@
 local addOnName, ns = ...
+------ Information -------
+-- Author: HarmlessHarm
+-- Server: Zandalari Tribe | EU
 
--- CREDITS TO xxx FOR THE REP DB
--- CRETITS TO xxx FOR THE TAGS IN QLOG
+------ Credits -------
+-- I want to give credits to SevenEuros!
+-- This addon relies heavily on his/her Rep DB that is bundled with the QuestRep Addon
+-- For more information about QuestRep visit: https://www.curseforge.com/wow/addons/questrep
+-- I also want to give credits to KindredTwitch
+-- The idea of adding tags to the quest log as well as the implementation of it leaded directly
+-- to the creation of my AddOn
+-- For more information about Quest XP Tracker visit https://www.curseforge.com/wow/addons/quest-xp-tracker
 
--- TODOS FOR REPUTATION
+
+------ ToDo's -------
 -- - [V] Fix functionality at level cap
 -- - [V] Handle quests that give no REP
 -- - [ ] Make Rep visibility toggle
@@ -17,32 +27,136 @@ local addOnName, ns = ...
 -- - [ ] USE LeatrixPlus quest lvl tag code : LTP:3820
 -- - [ ] Add REP to quest tooltips (in chat, on map? needs questie?)
 --      - Questie/Modules/Tooltips/Link.lua:27 ItemRefTooltip
+--      - Use QuestieLoader to import Tooltip modules and Chat filter
+--      - Use the QuestieTooltip to add a line to tooltip
 
 
 
 local QRep = CreateFrame("FRAME")
 
 QRep:RegisterEvent("ADDON_LOADED")
--- QRep:RegisterEvent("MODIFIER_STATE_CHANGED")
 
 SLASH_QREP1 = "/qr"
 SLASH_QREP2 = "/qrep"
 SLASH_QREP3 = "/questrep"
-SLASH_QREP4 = "/hqr"
 
-function QRep:SlashHandler(N)
-    if (not (N == "")) then
-        local intN = tonumber(N) or 0
-        if (intN >= 0) then
-            QRepDB.factionLength = tonumber(N)
-        else
-            QRepDB.factionLength = 0
+
+
+----------------------------------------------
+----------- Rep Questie Tooltips -------------
+----------------------------------------------
+
+
+local function HarmlessQuestRepTooltip(questID_str)
+    local questID = tonumber(questID_str)
+    local db_item = ns.quest_rep_db[questID]
+    if db_item then
+        ItemRefTooltip:AddLine(" ", 1, 1, 1, 0)
+        ItemRefTooltip:AddLine("Reputation:", 1, 1, 1, 1)
+        local textLeft, textRight
+        for _, q in ipairs(db_item) do
+            ItemRefTooltip:AddDoubleLine(q[1], q[2], 1, 1, 1, 1, 1, 1)
         end
-        -- QRep:QuestLog_Update("QuestLog")
+    end
+end
+
+-- local HarmlessGameTooltip = function()
+--     GameTooltip:AddLine("Harmless Tooltip", 1, 1, 1, nil)
+-- end
+
+LoadAddOn("Questie")
+
+if Questie and QuestieLoader then
+    local QuestieLink = QuestieLoader:ImportModule("QuestieLink")
+    local QuestieDB = QuestieLoader:ImportModule("QuestieDB")
+    local QuestieTooltips = QuestieLoader:ImportModule("QuestieTooltips");
+    
+    local oldItemSetHyperlink = ItemRefTooltip.SetHyperlink
+    
+    -- Use the Questie Code to create a tooltip if a link is a quest
+    function ItemRefTooltip:SetHyperlink(link, ...)
+        local _, isQuestieLink, questId
+        isQuestieLink, questId = string.match(link, "(questie):(%d+):")
+        QuestieLink.lastItemRefTooltip = QuestieLink.lastItemRefTooltip or link
+        
+        if QRepDB.SHOW_TOOLTIP and isQuestieLink and questId then
+            Questie:Debug(DEBUG_DEVELOP, "[QuestieTooltips:ItemRefTooltip] SetHyperlink: " .. link)
+            ShowUIPanel(ItemRefTooltip)
+            ItemRefTooltip:SetOwner(UIParent, "ANCHOR_PRESERVE");
+            QuestieLink:CreateQuestTooltip(link)
+            -- Add Reputation information below the Questie Tooltip
+            HarmlessQuestRepTooltip(questId)
+            ItemRefTooltip:Show()
+    
+            -- Clear tooltip if tooltip is open and link is clicked
+            local tooltipText = ItemRefTooltipTextLeft1:GetText()
+            if QuestieLink.lastItemRefTooltip == tooltipText then
+                ItemRefTooltip:Hide()
+                QuestieLink.lastItemRefTooltip = ""
+                return
+            end
+    
+            QuestieLink.lastItemRefTooltip = tooltipText
+            return
+        else
+            -- Make sure to call the default function so everything that is not Questie can be handled (item links e.g.)
+            oldItemSetHyperlink(self, link, ...)
+        end
+    end
+
+    -- Clears the lastItemRefTooltip on tooltip close
+    -- ItemRefTooltip:HookScript("OnTooltipSetItem", _QuestieTooltips.AddItemDataToTooltip)
+    ItemRefTooltip:HookScript("OnHide", function(self)
+        if (not self.IsForbidden) or (not self:IsForbidden()) then -- do we need this here also
+            QuestieLink.lastItemRefTooltip = ""
+        end
+    end)
+end
+
+
+----------------------------------------------
+function QRep:ShowHelp()
+    print("Harmless Quest Rep Reward")
+    print("- Use /qr tooltip to toggle reputation line in questie quest link tooltips")
+    print("- Use /qr taglength [NUM] to set the number of character used to display the faction tag")
+    print("- Use /qr taglength 0 to display the entire faction name")
+end
+
+function QRep:SlashHandler(input_string)
+    if (input_string == "") then
+        QRep:ShowHelp()
     else
-        print("Harmless Quest Rep Reward")
-        print("- Use /qr NUM to set the number of character used to display the faction tag")
-        print("- Use /qr 0 to display the entire faction name")
+        -- Split input on space
+        args = {}
+        for token in string.gmatch(input_string, "[^%s]+") do
+            table.insert(args, token)
+        end
+        if args[1] == "tooltip" or args[1] == "tt" then
+            -- toggle tooltip
+            QRepDB.SHOW_TOOLTIP = not QRepDB.SHOW_TOOLTIP
+            if QRepDB.SHOW_TOOLTIP then
+                print("Reputation tooltips enabled")
+            else
+                print("Reputation tooltips disabled")
+            end
+
+
+        elseif args[1] == "taglength" or args[1] == "tl" then
+            local intN = tonumber(args[2]) or nil
+            if not (intN == nil) then
+                if (intN >= 0) then
+                    QRepDB.FACTION_LENGTH = intN
+                else
+                    QRepDB.FACTION_LENGTH = 0
+                end
+            else
+                print("Invalid tag length")
+            end
+        elseif args[1] == "help" or args[1] == "h" then
+            QRep:ShowHelp()
+        else
+            print("Invalid arguments")
+        end
     end
 end
 
@@ -54,8 +168,9 @@ function QRep:ADDON_LOADED(loadedAddOnName)
     -- print("Harmless Quest Rep Reward Loaded")
     if loadedAddOnName == addOnName then
         QRepDB = QRepDB or {}
-        if (not QRepDB.factionLength) then
-            QRepDB.factionLength = 3
+        if (not QRepDB.FACTION_LENGTH) then
+            QRepDB.FACTION_LENGTH = 3
+            QRepDB.SHOW_TOOLTIP = true
         end
 
         QRep:RegisterEvent("QUEST_DETAIL")
@@ -174,12 +289,11 @@ end
 function getQuestRep(questID, compact)
     local questRep = nil
     local db_item = ns.quest_rep_db[questID]
-    if db_item
-    then
-        for i, q in ipairs(ns.quest_rep_db[questID]) do
+    if db_item then
+        for i, q in ipairs(db_item) do
             if (compact) then
-                if (QRepDB.factionLength and QRepDB.factionLength > 0) then 
-                    questRep = string.sub(q[1], 1, QRepDB.factionLength)
+                if (QRepDB.FACTION_LENGTH and QRepDB.FACTION_LENGTH > 0) then 
+                    questRep = string.sub(q[1], 1, QRepDB.FACTION_LENGTH)
                 else
                     questRep = q[1]
                 end

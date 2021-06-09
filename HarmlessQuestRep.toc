@@ -3,6 +3,7 @@
 ## Author: HarmlessHarm
 ## Version: 0.1
 ## Notes: Shows Quest Rep in the QuestLog Frame
+## OptionalDeps: Questie
 ## SavedVariablesPerCharacter: QRepDB
 
 db.lua
