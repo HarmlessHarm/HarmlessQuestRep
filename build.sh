@@ -22,6 +22,8 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
+VERSION_TAG=$(git describe --tags)
+
 printf "\n${GREEN}> COPYING FILES${NC}\n"
 TEMP="${DIST_PATH}${ADDON_NAME}"
 mkdir ${TEMP}
@@ -29,11 +31,11 @@ cp *.lua *.toc ${TEMP}
 
 printf "\n${GREEN}> CREATING ERA DIST${NC}\n"
 cp ${TEMP}/${ADDON_NAME}${ERA_FLAG}.toc ${TEMP}/${ADDON_NAME}.toc
-powershell Compress-Archive -Force ${TEMP} ${TEMP}${ERA_FLAG}.zip
+powershell Compress-Archive -Force ${TEMP} ${TEMP}_${VERSION_TAG}${ERA_FLAG}.zip
 
 printf "\n${GREEN}> CREATING BCC DIST${NC}\n"
 cp ${TEMP}/${ADDON_NAME}${BCC_FLAG}.toc ${TEMP}/${ADDON_NAME}.toc
-powershell Compress-Archive -Force ${TEMP} ${TEMP}${BCC_FLAG}.zip
+powershell Compress-Archive -Force ${TEMP} ${TEMP}_${VERSION_TAG}${BCC_FLAG}.zip
 
 printf "\n${GREEN}> CLEANING UP${NC}\n"
 rm -rf ${TEMP}
