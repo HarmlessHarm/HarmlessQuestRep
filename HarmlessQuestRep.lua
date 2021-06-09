@@ -103,30 +103,60 @@ if Questie and QuestieLoader then
             oldItemSetHyperlink(self, link, ...)
         end
     end
+
+    -- Clears the lastItemRefTooltip on tooltip close
+    -- ItemRefTooltip:HookScript("OnTooltipSetItem", _QuestieTooltips.AddItemDataToTooltip)
+    ItemRefTooltip:HookScript("OnHide", function(self)
+        if (not self.IsForbidden) or (not self:IsForbidden()) then -- do we need this here also
+            QuestieLink.lastItemRefTooltip = ""
+        end
+    end)
 end
-
--- if QuestieLoader then
--- end
-
-
 
 
 ----------------------------------------------
+function QRep:ShowHelp()
+    print("Harmless Quest Rep Reward")
+    print("- Use /qr tooltip to toggle reputation line in questie quest link tooltips")
+    print("- Use /qr taglength [NUM] to set the number of character used to display the faction tag")
+    print("- Use /qr taglength 0 to display the entire faction name")
+end
 
-
-function QRep:SlashHandler(N)
-    if (not (N == "")) then
-        local intN = tonumber(N) or 0
-        if (intN >= 0) then
-            QRepDB.factionLength = tonumber(N)
-        else
-            QRepDB.factionLength = 0
-        end
-        -- QRep:QuestLog_Update("QuestLog")
+function QRep:SlashHandler(input_string)
+    if (input_string == "") then
+        QRep:ShowHelp()
     else
-        print("Harmless Quest Rep Reward")
-        print("- Use /qr NUM to set the number of character used to display the faction tag")
-        print("- Use /qr 0 to display the entire faction name")
+        -- Split input on space
+        args = {}
+        for token in string.gmatch(input_string, "[^%s]+") do
+            table.insert(args, token)
+        end
+        if args[1] == "tooltip" or args[1] == "tt" then
+            -- toggle tooltip
+            QRepDB.SHOW_TOOLTIP = not QRepDB.SHOW_TOOLTIP
+            if QRepDB.SHOW_TOOLTIP then
+                print("Reputation tooltips enabled")
+            else
+                print("Reputation tooltips disabled")
+            end
+
+
+        elseif args[1] == "taglength" or args[1] == "tl" then
+            local intN = tonumber(args[2]) or nil
+            if not (intN == nil) then
+                if (intN >= 0) then
+                    QRepDB.FACTION_LENGTH = intN
+                else
+                    QRepDB.FACTION_LENGTH = 0
+                end
+            else
+                print("Invalid tag length")
+            end
+        elseif args[1] == "help" or args[1] == "h" then
+            QRep:ShowHelp()
+        else
+            print("Invalid arguments")
+        end
     end
 end
 
@@ -138,8 +168,9 @@ function QRep:ADDON_LOADED(loadedAddOnName)
     -- print("Harmless Quest Rep Reward Loaded")
     if loadedAddOnName == addOnName then
         QRepDB = QRepDB or {}
-        if (not QRepDB.factionLength) then
-            QRepDB.factionLength = 3
+        if (not QRepDB.FACTION_LENGTH) then
+            QRepDB.FACTION_LENGTH = 3
+            QRepDB.SHOW_TOOLTIP = true
         end
 
         QRep:RegisterEvent("QUEST_DETAIL")
@@ -261,8 +292,8 @@ function getQuestRep(questID, compact)
     if db_item then
         for i, q in ipairs(db_item) do
             if (compact) then
-                if (QRepDB.factionLength and QRepDB.factionLength > 0) then 
-                    questRep = string.sub(q[1], 1, QRepDB.factionLength)
+                if (QRepDB.FACTION_LENGTH and QRepDB.FACTION_LENGTH > 0) then 
+                    questRep = string.sub(q[1], 1, QRepDB.FACTION_LENGTH)
                 else
                     questRep = q[1]
                 end
