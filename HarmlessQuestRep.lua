@@ -22,6 +22,7 @@ local addOnName, ns = ...
 -- - [ ] Handel factions starting with "The"
 -- - [ ] Add option to show XP. Take a look at old addon 
 -- - [ ] Add option to show Gold reward at max level. conversion rate: 6c per exp
+-- - [ ] Add Rep Reward to Quest details (RepReward addon)
 
 
 -- - [ ] USE LeatrixPlus quest lvl tag code : LTP:3820
@@ -69,7 +70,12 @@ LoadAddOn("Questie")
 if Questie and QuestieLoader then
     local QuestieLink = QuestieLoader:ImportModule("QuestieLink")
     local QuestieDB = QuestieLoader:ImportModule("QuestieDB")
-    local QuestieTooltips = QuestieLoader:ImportModule("QuestieTooltips");
+    local QuestieLib = QuestieLoader:ImportModule("QuestieLib")
+    -- local QuestieTooltips = QuestieLoader:ImportModule("QuestieTooltips")
+    -- local QuestieFramePool = QuestieLoader:ImportModule("QuestieFramePool")
+    
+   
+    
     
     local oldItemSetHyperlink = ItemRefTooltip.SetHyperlink
     
@@ -111,6 +117,100 @@ if Questie and QuestieLoader then
             QuestieLink.lastItemRefTooltip = ""
         end
     end)
+
+    local originalGetColoredQuestName = QuestieLib.GetColoredQuestName
+
+    function QuestieLib:GetColoredQuestName(questId, showLevel, showState, blizzLike)
+        -- print(questId)
+        local questieName = originalGetColoredQuestName(self, questId, showLevel, showState, blizzLike)
+        local rep = getQuestRep(questId, true)
+        if rep then
+            questieName =  questieName .. " [" ..rep .. "]"
+        end
+        return questieName
+    end
+
+    GameTooltip:HookScript("OnShow", function(self)
+        -- print("Game Tooltip Triggered")
+        -- print(self:GetName())
+        -- print(self.miniMapIcon)
+        -- print(self.npcOrder)
+        -- print("----")
+        -- for k, v in pairs(self) do
+        --     print(k)
+        -- end
+        -- print("----")
+        if self._owner then
+            local questIds = {}
+            if self.npcOrder then
+                for questText, quests in pairs(self.npcOrder) do
+                    -- local i = 1
+                    for key, questData in pairs(quests) do
+                        
+                        -- local rep = getQuestRep(questData.questId, true)
+                        -- local titLen = #questData.title
+                        -- if rep and not questData.hasRep then
+                        --     self.npcOrder[questText][key].title = questData.title .. " [".. rep .. "]"
+                        --     self.npcOrder[questText][key].hasRep = true
+                        -- end
+                    end
+                end
+            end
+            if self.questOrder then
+                for questId, textList in pairs(self.questOrder) do
+                    
+                    local quest = QuestieDB:GetQuest(questId);
+                    local questTitle = QuestieLib:GetColoredQuestName(questId, Questie.db.global.enableTooltipsQuestLevel, true, true);
+                    
+                    -- table.insert(questIds, id)
+                    -- print(questTitle)
+
+                    -- local rep = getQuestRep(id, true)
+                    -- local hasRep = (questTitle:sub(#questTitle, #questTitle)  == "]")
+                    -- print(hasRep)
+                    -- if rep and (not hasRep) then
+                    --     print('add rep')
+                    --     self.questOrder[questId].title = questTitle .. " [".. rep .. "]"
+                    --     -- self.questOrder[questId].hasRep = true
+                    -- end
+                end
+            end
+
+            -- if #questIds > 0 then
+            --     for i, qID in pairs(questIds) do 
+            --         local rep = getQuestRep(qID, false)
+            --         if rep then
+            --             self:AddLine(rep)
+            --         end
+            --     end
+            -- end
+
+            -- self:SetOwner(self.GetParent(), "ANCHOR_CURSOR");
+
+            -- self:Hide()
+            if self._Rebuild then
+                self:ClearLines()
+                self:SetOwner(self._owner, "ANCHOR_CURSOR")
+                self:_Rebuild()
+                self:SetFrameStrata("TOOLTIP");
+            end
+            -- self:Show();
+        end
+
+        -- self:AddLine("Test")
+        -- local children = self:GetChildren()
+        -- print(children)
+        -- for child in children do
+        --     print(child:GetName())
+        -- end
+    end)
+
+    ItemRefTooltip:HookScript("OnShow", function(self)
+        print("World Tooltip Triggered")
+    end)
+
+    -- QuestieTooltip:HookScript("OnShow")
+
 end
 
 
