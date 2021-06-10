@@ -306,6 +306,10 @@ function getQuestRep(questID, compact)
     if db_item then
         for i, q in ipairs(db_item) do
             if (compact) then
+                -- Remove "The " from compact names
+                if q[1]:sub(1,4) == "The " then
+                    q[1] = q[1]:sub(5,#q[1])
+                end
                 if (QRepDB.FACTION_LENGTH and QRepDB.FACTION_LENGTH > 0) then 
                     questRep = string.sub(q[1], 1, QRepDB.FACTION_LENGTH)
                 else

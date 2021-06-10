@@ -24,6 +24,9 @@ fi
 
 VERSION_TAG=$(git describe --tags)
 
+# printf "Found tag: ${VERSION_TAG}"
+read  -n 1 -p "STARTING BUILD FOR ${ADDON_NAME}_${VERSION_TAG}-[BCC/ERA].zip - CONTINUE?"
+
 printf "\n${GREEN}> COPYING FILES${NC}\n"
 TEMP="${DIST_PATH}${ADDON_NAME}"
 mkdir ${TEMP}
